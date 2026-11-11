@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html { scroll-behavior: smooth; }
+::selection { background: #C8AA7A; color: #5B1F2E; }
+
+/* Scroll-reveal: content is visible without JS; Reveal arms it after load. */
+.reveal { transition: opacity .8s ease, transform .8s ease; }
+.reveal-hidden { opacity: 0; transform: translateY(24px); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal { transition: none; }
+  .reveal-hidden { opacity: 1; transform: none; }
+  *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+}

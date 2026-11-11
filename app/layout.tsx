@@ -2,21 +2,61 @@ import "./globals.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { Cormorant_Garamond, Jost } from "next/font/google";
 import CartProvider from "../components/CartProvider";
+import CartLink from "../components/CartLink";
 
-export const metadata: Metadata = { title: "Lace and Luxe Delicates", description: "Lingerie and undergarments" };
+const display = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500", "600"], style: ["normal", "italic"], variable: "--font-display", display: "swap" });
+const body = Jost({ subsets: ["latin"], variable: "--font-body", display: "swap" });
+
+export const metadata: Metadata = { title: "Lace & Luxe", description: "Lingerie, sleepwear and everyday essentials." };
+
+const NAV: [string, string][] = [
+  ["Shop all", "/shop"], ["Bras", "/shop?category=bras"], ["Panties", "/shop?category=panties"],
+  ["Lingerie sets", "/shop?category=lingerie-sets"], ["Sleepwear", "/shop?category=sleepwear"], ["For him", "/shop?category=mens-underwear"],
+];
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-white text-slate-800">
+    <html lang="en" className={`${display.variable} ${body.variable}`}>
+      <body className="flex min-h-screen flex-col bg-ivory font-sans text-claret antialiased">
         <CartProvider>
-          <header className="flex items-center justify-between bg-brand px-6 py-4 text-white">
-            <Link href="/" className="text-xl font-bold">Lace and Luxe</Link>
-            <Link href="/cart" className="rounded bg-accent px-3 py-1">Cart</Link>
+          <div className="bg-claret py-2 text-center text-xs tracking-[0.2em] text-champagne">ORDER ON WHATSAPP · PAY WITH M-PESA · DISCREET PACKAGING</div>
+          <header className="sticky top-0 z-30 border-b border-champagne/30 bg-ivory/85 backdrop-blur">
+            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+              <Link href="/" className="flex items-center gap-3">
+                <img src="/brand/monogram-claret.svg" alt="" className="h-9 w-auto" />
+                <span className="font-serif text-2xl tracking-wide">Lace &amp; Luxe</span>
+              </Link>
+              <nav className="hidden items-center gap-7 text-sm md:flex">
+                {NAV.map(([label, href]) => <Link key={label} href={href} className="transition hover:text-champagne">{label}</Link>)}
+              </nav>
+              <CartLink />
+            </div>
+            <nav className="flex gap-5 overflow-x-auto px-6 pb-3 text-sm md:hidden">
+              {NAV.map(([label, href]) => <Link key={label} href={href} className="whitespace-nowrap">{label}</Link>)}
+            </nav>
           </header>
-          <main className="mx-auto max-w-6xl p-6">{children}</main>
-          <footer className="mt-12 bg-slate-100 p-6 text-sm text-slate-500">© Lace and Luxe Delicates</footer>
+          <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">{children}</main>
+          <footer className="mt-16 bg-claret text-ivory">
+            <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 md:grid-cols-3">
+              <div>
+                <img src="/brand/badge-champagne.svg" alt="" className="h-24 w-auto" />
+                <p className="mt-3 max-w-xs text-sm text-ivory/70">Lingerie, sleepwear and everyday essentials. Delivered discreetly.</p>
+              </div>
+              <div>
+                <p className="mb-3 text-xs uppercase tracking-[0.25em] text-champagne">Shop</p>
+                <ul className="space-y-2 text-sm text-ivory/80">
+                  {NAV.map(([label, href]) => <li key={label}><Link href={href} className="hover:text-champagne">{label}</Link></li>)}
+                </ul>
+              </div>
+              <div>
+                <p className="mb-3 text-xs uppercase tracking-[0.25em] text-champagne">Help</p>
+                <ul className="space-y-2 text-sm text-ivory/80"><li><Link href="/cart" className="hover:text-champagne">Cart</Link></li></ul>
+              </div>
+            </div>
+            <p className="border-t border-ivory/10 py-4 text-center text-xs text-ivory/50">© Lace &amp; Luxe Delicates</p>
+          </footer>
         </CartProvider>
       </body>
     </html>

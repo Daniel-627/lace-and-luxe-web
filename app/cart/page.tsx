@@ -1,50 +1,75 @@
 "use client";
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "../../components/CartProvider";
 import { post, kes } from "../../lib/api";
-import type { Order } from "../../lib/types";
+
+interface Created { reference: string; trackingToken: string }
+const empty = { name: "", phone: "", phone2: "", email: "", dName: "", dPhone: "", county: "", area: "", details: "" };
 
 export default function CartPage() {
   const { items, remove, clear, total } = useCart();
-  const [form, setForm] = useState({ email: "", phone: "" });
+  const [f, setF] = useState(empty);
+  const [other, setOther] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const router = useRouter();
 
-  async function pay(method: "mpesa" | "paystack") {
-    setBusy(true); setMsg("");
+  const set = (k: keyof typeof empty) => (e: ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
+  const input = "w-full rounded-sm border border-champagne/60 bg-white/70 p-2";
+
+  async function payMpesa() {
+    setMsg("");
+    if (!token && f.phone.replace(/\D/g, "") !== f.phone2.replace(/\D/g, "")) return setMsg("The two phone numbers don't match.");
+    setBusy(true);
     try {
-      const order = await post<Order>("/api/orders", { ...form, items: items.map((i) => ({ productId: i.id, qty: i.qty })) });
-      if (method === "mpesa") {
-        const d = await post<{ message: string }>("/api/pay/mpesa", { orderId: order.id, phone: form.phone });
-        setMsg(d.message); clear();
-        setTimeout(() => router.push(`/orders/${order.id}`), 4000);
-      } else {
-        const d = await post<{ url: string }>("/api/pay/paystack", { orderId: order.id });
-        clear(); window.location.href = d.url;
+      let t = token;
+      if (!t) {
+        const order = await post<Created>("/api/orders", {
+          contact: { name: f.name, phone: f.phone },
+          email: f.email,
+          delivery: { name: other ? f.dName : f.name, phone: other ? f.dPhone : f.phone, county: f.county, area: f.area, details: f.details },
+          items: items.map((i) => ({ productId: i.id, qty: i.qty })),
+        });
+        t = order.trackingToken; setToken(t); clear();
       }
+      await post("/api/pay/mpesa", { token: t });
+      router.push(`/track/${t}`);
     } catch (e) { setMsg(e instanceof Error ? e.message : "Something went wrong"); }
     finally { setBusy(false); }
   }
 
-  if (!items.length) return <p>{msg || "Your cart is empty."}</p>;
+  if (!items.length && !token) return <p>Your cart is empty.</p>;
   return (
     <div className="max-w-xl space-y-4">
-      <h1 className="text-2xl font-bold">Cart</h1>
+      <h1 className="font-serif text-3xl">Checkout</h1>
       {items.map((i) => (
-        <div key={i.id} className="flex justify-between border-b py-2">
+        <div key={i.id} className="flex justify-between border-b border-champagne/40 py-2">
           <span>{i.name} × {i.qty}</span>
-          <span>{kes(i.price * i.qty)} <button onClick={() => remove(i.id)} className="ml-2 text-accent">remove</button></span>
+          <span>{kes(i.price * i.qty)} <button onClick={() => remove(i.id)} className="ml-2 underline">remove</button></span>
         </div>
       ))}
-      <p className="text-lg font-semibold">Total: {kes(total)}</p>
-      <input className="w-full rounded border p-2" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-      <input className="w-full rounded border p-2" placeholder="M-Pesa phone (07xx…)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-      <div className="flex gap-2">
-        <button disabled={busy} onClick={() => pay("mpesa")} className="flex-1 rounded bg-green-600 py-2 text-white disabled:opacity-50">Pay with M-Pesa</button>
-        <button disabled={busy} onClick={() => pay("paystack")} className="flex-1 rounded bg-brand py-2 text-white disabled:opacity-50">Card / Paystack</button>
-      </div>
+      {items.length > 0 && <p className="text-lg font-semibold">Total: {kes(total)}</p>}
+      {!token && (
+        <>
+          <input className={input} placeholder="Your name" value={f.name} onChange={set("name")} />
+          <input className={input} placeholder="Phone (07xx…)" inputMode="tel" value={f.phone} onChange={set("phone")} />
+          <input className={input} placeholder="Confirm phone" inputMode="tel" value={f.phone2} onChange={set("phone2")} />
+          <input className={input} placeholder="Email (optional)" value={f.email} onChange={set("email")} />
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={other} onChange={(e) => setOther(e.target.checked)} /> Deliver to someone else</label>
+          {other && (<>
+            <input className={input} placeholder="Recipient name" value={f.dName} onChange={set("dName")} />
+            <input className={input} placeholder="Recipient phone" inputMode="tel" value={f.dPhone} onChange={set("dPhone")} />
+          </>)}
+          <input className={input} placeholder="County" value={f.county} onChange={set("county")} />
+          <input className={input} placeholder="Area / town" value={f.area} onChange={set("area")} />
+          <input className={input} placeholder="Delivery details (building, landmark)" value={f.details} onChange={set("details")} />
+        </>
+      )}
+      <button disabled={busy} onClick={payMpesa} className="w-full rounded-sm bg-claret py-3 text-ivory disabled:opacity-50">
+        {token ? "Send the M-Pesa prompt again" : "Pay with M-Pesa"}
+      </button>
       {msg && <p className="text-sm">{msg}</p>}
     </div>
   );
