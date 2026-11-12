@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useCart } from "./CartProvider";
+import WhatsAppButton from "./WhatsAppButton";
 import { kes } from "../lib/api";
 import { colourList, priceLabel } from "../lib/product";
 import type { Product } from "../lib/types";
@@ -57,6 +58,8 @@ export default function VariantPicker({ product }: { product: Product }) {
         className="w-full rounded-full bg-claret py-3 text-sm tracking-wide text-ivory transition hover:bg-claret/90 disabled:cursor-not-allowed disabled:opacity-40">
         {added ? "Added ✓" : chosen ? "Add to cart" : "Choose a size"}
       </button>
+      <WhatsAppButton source="product" disabled={!chosen || chosen.stock <= 0}
+        getItems={() => (chosen ? [{ variantId: chosen.id, qty: 1 }] : [])} />
     </div>
   );
 }

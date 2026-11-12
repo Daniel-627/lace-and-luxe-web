@@ -3,6 +3,7 @@ import { useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "../../components/CartProvider";
 import { post, kes } from "../../lib/api";
+import WhatsAppButton from "../../components/WhatsAppButton";
 
 interface Created { reference: string; trackingToken: string }
 const empty = { name: "", phone: "", phone2: "", email: "", dName: "", dPhone: "", county: "", area: "", details: "" };
@@ -70,6 +71,7 @@ export default function CartPage() {
       <button disabled={busy} onClick={payMpesa} className="w-full rounded-sm bg-claret py-3 text-ivory disabled:opacity-50">
         {token ? "Send the M-Pesa prompt again" : "Pay with M-Pesa"}
       </button>
+      {!token && <WhatsAppButton source="cart" getItems={() => items.map((i) => ({ variantId: i.variantId, qty: i.qty }))} label="Order on WhatsApp instead" />}
       {msg && <p className="text-sm">{msg}</p>}
     </div>
   );
