@@ -30,7 +30,7 @@ export default function CartPage() {
           contact: { name: f.name, phone: f.phone },
           email: f.email,
           delivery: { name: other ? f.dName : f.name, phone: other ? f.dPhone : f.phone, county: f.county, area: f.area, details: f.details },
-          items: items.map((i) => ({ productId: i.id, qty: i.qty })),
+          items: items.map((i) => ({ variantId: i.variantId, qty: i.qty })),
         });
         t = order.trackingToken; setToken(t); clear();
       }
@@ -45,9 +45,9 @@ export default function CartPage() {
     <div className="max-w-xl space-y-4">
       <h1 className="font-serif text-3xl">Checkout</h1>
       {items.map((i) => (
-        <div key={i.id} className="flex justify-between border-b border-champagne/40 py-2">
-          <span>{i.name} × {i.qty}</span>
-          <span>{kes(i.price * i.qty)} <button onClick={() => remove(i.id)} className="ml-2 underline">remove</button></span>
+        <div key={i.variantId} className="flex justify-between border-b border-champagne/40 py-2">
+          <span>{i.name} <span className="text-claret/60">({i.size}, {i.colour})</span> × {i.qty}</span>
+          <span>{kes(i.price * i.qty)} <button onClick={() => remove(i.variantId)} className="ml-2 underline">remove</button></span>
         </div>
       ))}
       {items.length > 0 && <p className="text-lg font-semibold">Total: {kes(total)}</p>}
