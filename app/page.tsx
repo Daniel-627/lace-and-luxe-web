@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { API } from "../lib/api";
-import type { Product } from "../lib/types";
+import { getProducts } from "../lib/api";
 import ProductCard from "../components/ProductCard";
 import SmartImage from "../components/SmartImage";
 import Reveal from "../components/Reveal";
@@ -25,9 +24,10 @@ const Title = ({ eyebrow, children }: { eyebrow: string; children: React.ReactNo
   </div>
 );
 
+export const dynamic = "force-dynamic"; // load products when the page is visited, not at build time
+
 export default async function Home() {
-  const res = await fetch(`${API}/api/products`, { next: { revalidate: 60 } });
-  const products: Product[] = res.ok ? await res.json() : [];
+  const products = await getProducts();
   const cats = Array.from(new Map(products.filter((p) => p.category).map((p) => [p.category!.slug, p.category!])).values());
 
   return (

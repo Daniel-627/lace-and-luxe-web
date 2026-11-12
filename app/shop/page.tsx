@@ -1,14 +1,13 @@
 import Link from "next/link";
-import { API } from "../../lib/api";
-import type { Product } from "../../lib/types";
+import { getProducts } from "../../lib/api";
 import ProductCard from "../../components/ProductCard";
 import Reveal from "../../components/Reveal";
 
 export const metadata = { title: "Shop | Lace & Luxe" };
+export const dynamic = "force-dynamic";
 
 export default async function Shop({ searchParams }: { searchParams: { category?: string } }) {
-  const res = await fetch(`${API}/api/products`, { next: { revalidate: 60 } });
-  const all: Product[] = res.ok ? await res.json() : [];
+  const all = await getProducts();
   const cats = Array.from(new Map(all.filter((p) => p.category).map((p) => [p.category!.slug, p.category!])).values());
   const active = searchParams.category;
   const products = active ? all.filter((p) => p.category?.slug === active) : all;

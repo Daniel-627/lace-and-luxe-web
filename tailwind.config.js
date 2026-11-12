@@ -4,8 +4,8 @@ module.exports = {
     extend: {
       colors: { ivory: "#F6EFE6", claret: "#5B1F2E", rose: "#C99A9A", champagne: "#C8AA7A", brand: "#5B1F2E", accent: "#5B1F2E" },
       fontFamily: {
-        serif: ["var(--font-display)", "Georgia", "Cambria", "serif"],
-        sans: ["var(--font-body)", "system-ui", "sans-serif"],
+        serif: ["\"Cormorant Garamond\"", "Georgia", "Cambria", "serif"],
+        sans: ["Jost", "system-ui", "sans-serif"],
       },
       keyframes: {
         "fade-up": { "0%": { opacity: "0", transform: "translateY(24px)" }, "100%": { opacity: "1", transform: "none" } },

@@ -1,13 +1,15 @@
 import "./globals.css";
+import "@fontsource/cormorant-garamond/400.css";
+import "@fontsource/cormorant-garamond/400-italic.css";
+import "@fontsource/cormorant-garamond/500.css";
+import "@fontsource/jost/400.css";
+import "@fontsource/jost/500.css";
+import "@fontsource/jost/600.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Cormorant_Garamond, Jost } from "next/font/google";
 import CartProvider from "../components/CartProvider";
 import CartLink from "../components/CartLink";
-
-const display = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500", "600"], style: ["normal", "italic"], variable: "--font-display", display: "swap" });
-const body = Jost({ subsets: ["latin"], variable: "--font-body", display: "swap" });
 
 export const metadata: Metadata = { title: "Lace & Luxe", description: "Lingerie, sleepwear and everyday essentials." };
 
@@ -18,7 +20,7 @@ const NAV: [string, string][] = [
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html lang="en">
       <body className="flex min-h-screen flex-col bg-ivory font-sans text-claret antialiased">
         <CartProvider>
           <div className="bg-claret py-2 text-center text-xs tracking-[0.2em] text-champagne">ORDER ON WHATSAPP · PAY WITH M-PESA · DISCREET PACKAGING</div>
