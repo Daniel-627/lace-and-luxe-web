@@ -14,7 +14,7 @@ async function query<T>(groq: string): Promise<T | null> {
 export const sanityImg = (url?: string, w = 1200) =>
   url && url.includes("cdn.sanity.io") ? `${url}?w=${w}&auto=format&q=80` : url;
 
-const HOME = `*[_id == "homePage"][0]{ blocks[]{ ..., "imageUrl": image.asset->url, banners[]{ ..., "imageUrl": image.asset->url } } }`;
+const HOME = `*[_id == "homePage"][0]{ blocks }`;
 
 /** Never throws: falls back to the built-in homepage. */
 export async function getHomeBlocks(): Promise<Block[]> {
