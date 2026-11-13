@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import CartProvider from "../components/CartProvider";
 import CartLink from "../components/CartLink";
+import { getAnnouncement } from "../lib/sanity";
 
 export const metadata: Metadata = { title: "Lace & Luxe", description: "Lingerie, sleepwear and everyday essentials." };
 
@@ -18,12 +19,13 @@ const NAV: [string, string][] = [
   ["Lingerie sets", "/shop?category=lingerie-sets"], ["Sleepwear", "/shop?category=sleepwear"], ["For him", "/shop?category=mens-underwear"],
 ];
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const announcement = await getAnnouncement();
   return (
     <html lang="en">
       <body className="flex min-h-screen flex-col bg-ivory font-sans text-claret antialiased">
         <CartProvider>
-          <div className="bg-claret py-2 text-center text-xs tracking-[0.2em] text-champagne">ORDER ON WHATSAPP · PAY WITH M-PESA · DISCREET PACKAGING</div>
+          {announcement && <div className="bg-claret py-2 text-center text-xs uppercase tracking-[0.2em] text-champagne">{announcement}</div>}
           <header className="sticky top-0 z-30 border-b border-champagne/30 bg-ivory/85 backdrop-blur">
             <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
               <Link href="/" className="flex items-center gap-3">
