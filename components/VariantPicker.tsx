@@ -6,10 +6,12 @@ import { kes } from "../lib/api";
 import { colourList, priceLabel } from "../lib/product";
 import type { Product } from "../lib/types";
 
-export default function VariantPicker({ product }: { product: Product }) {
+export default function VariantPicker({ product, colour: colourProp, onColourChange }: { product: Product; colour?: string; onColourChange?: (c: string) => void }) {
   const { add } = useCart();
   const colours = useMemo(() => colourList(product.variants), [product.variants]);
-  const [colour, setColour] = useState(colours[0]?.name ?? "");
+  const [ownColour, setOwnColour] = useState(colours[0]?.name ?? "");
+  const colour = colourProp ?? ownColour;
+  const setColour = (c: string) => { setOwnColour(c); onColourChange?.(c); };
   const [size, setSize] = useState("");
   const [added, setAdded] = useState(false);
 
