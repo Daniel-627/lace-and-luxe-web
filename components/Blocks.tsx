@@ -79,7 +79,7 @@ function Render({ b, products }: { b: Block; products: Product[] }) {
               <Reveal key={c.slug} delay={i * 80}>
                 <Link href={`/shop?category=${c.slug}`} className="group flex flex-col items-center gap-3 text-center">
                   <div className="h-28 w-28 overflow-hidden rounded-full bg-rose/20 ring-1 ring-champagne/50 transition duration-500 group-hover:ring-4 group-hover:ring-champagne/60 md:h-36 md:w-36">
-                    <SmartImage src={products.find((p) => p.category?.slug === c.slug)?.image} alt={c.name} className="transition duration-700 group-hover:scale-110" />
+                    <SmartImage src={sanityImg(products.find((p) => p.category?.slug === c.slug)?.image ?? undefined, 400)} alt={c.name} className="transition duration-700 group-hover:scale-110" />
                   </div>
                   <span className="font-serif text-xl">{c.name}</span>
                 </Link>
