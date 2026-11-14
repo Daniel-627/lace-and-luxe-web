@@ -11,6 +11,7 @@ import Link from "next/link";
 import CartProvider from "../components/CartProvider";
 import CartLink from "../components/CartLink";
 import { getAnnouncement } from "../lib/sanity";
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = { title: "Lace & Luxe", description: "Lingerie, sleepwear and everyday essentials." };
 
@@ -21,6 +22,7 @@ const NAV: [string, string][] = [
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const announcement = await getAnnouncement();
+  const signedIn = !!cookies().get("ll_session");
   return (
     <html lang="en">
       <body className="flex min-h-screen flex-col bg-ivory font-sans text-claret antialiased">
@@ -35,7 +37,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <nav className="hidden items-center gap-7 text-sm md:flex">
                 {NAV.map(([label, href]) => <Link key={label} href={href} className="transition hover:text-champagne">{label}</Link>)}
               </nav>
-              <CartLink />
+              <div className="flex items-center gap-4"><Link href={signedIn ? "/account" : "/account/login"} className="text-sm transition hover:text-champagne">{signedIn ? "Account" : "Sign in"}</Link><CartLink /></div>
             </div>
             <nav className="flex gap-5 overflow-x-auto px-6 pb-3 text-sm md:hidden">
               {NAV.map(([label, href]) => <Link key={label} href={href} className="whitespace-nowrap">{label}</Link>)}

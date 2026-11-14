@@ -1,17 +1,19 @@
 import { API, kes } from "../../../lib/api";
 import AutoRefresh from "../../../components/AutoRefresh";
+import { edgeHeaders } from "../../../lib/session";
 
 export const dynamic = "force-dynamic";
 
 interface Tracked {
-  reference: string; status: "PENDING" | "PAID" | "FAILED"; total: number; mpesaReceipt: string | null;
+  reference: string; status: "PENDING" | "PAID" | "FAILED"; fulfilment: string; total: number; mpesaReceipt: string | null;
   delivery: { county: string; area: string }; phoneHint: string;
   items: { name: string; price: number; qty: number }[];
 }
 const LABEL = { PENDING: "Waiting for payment", PAID: "Payment received", FAILED: "Payment failed" } as const;
+const FULFIL: Record<string, string> = { NEW: "Order received", PACKED: "Packed", OUT_FOR_DELIVERY: "On its way to you", DELIVERED: "Delivered", CANCELLED: "Cancelled" };
 
 export default async function Track({ params }: { params: { token: string } }) {
-  const res = await fetch(`${API}/api/orders/track/${params.token}`, { cache: "no-store" });
+  const res = await fetch(`${API}/api/orders/track/${params.token}`, { cache: "no-store", headers: edgeHeaders() });
   if (!res.ok) return <p>We couldn&apos;t find that order.</p>;
   const o: Tracked = await res.json();
   return (
@@ -19,6 +21,7 @@ export default async function Track({ params }: { params: { token: string } }) {
       <AutoRefresh active={o.status === "PENDING"} />
       <h1 className="font-serif text-3xl">Order {o.reference}</h1>
       <p className="text-lg">{LABEL[o.status]}{o.mpesaReceipt && ` · M-Pesa ${o.mpesaReceipt}`}</p>
+      <p className="text-sm">Delivery: <b>{FULFIL[o.fulfilment] ?? o.fulfilment}</b></p>
       {o.status === "PENDING" && <p className="text-sm text-claret/70">Enter your M-Pesa PIN on your phone. This page updates by itself.</p>}
       <div className="rounded-sm border border-champagne/40 bg-white/50 p-4">
         {o.items.map((i, k) => (
