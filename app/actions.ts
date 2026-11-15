@@ -5,9 +5,9 @@ import { COOKIE, apiAuth } from "../lib/session";
 
 type Res = { ok?: true; error?: string };
 
-export async function requestCode(phone: string): Promise<Res> {
-  const r = await apiAuth("/api/auth/request-code", { method: "POST", body: JSON.stringify({ phone }) });
-  return r.error ? { error: r.error } : { ok: true };
+export async function requestCode(phone: string): Promise<{ ok?: true; manual?: boolean; error?: string }> {
+  const r = await apiAuth<{ manual?: boolean }>("/api/auth/request-code", { method: "POST", body: JSON.stringify({ phone }) });
+  return r.error ? { error: r.error } : { ok: true, manual: !!r.data?.manual };
 }
 
 export async function verifyCode(phone: string, code: string): Promise<{ error: string }> {
