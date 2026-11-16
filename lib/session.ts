@@ -15,7 +15,7 @@ export function edgeHeaders(): Record<string, string> {
 }
 
 /** Server-side call to the API as the signed-in customer. Never throws. */
-export async function apiAuth<T>(path: string, init: RequestInit = {}): Promise<{ status: number; data: T | null; error?: string }> {
+export async function apiAuth<T>(path: string, init: RequestInit = {}): Promise<{ status: number; data: T | null; error?: string; code?: string }> {
   const token = cookies().get(COOKIE)?.value;
   const res = await fetch(`${API}${path}`, {
     ...init,
@@ -25,7 +25,8 @@ export async function apiAuth<T>(path: string, init: RequestInit = {}): Promise<
   if (!res) return { status: 0, data: null, error: "Can't reach the shop right now. Please try again." };
   const body = await res.json().catch(() => null);
   if (res.ok) return { status: res.status, data: body as T };
-  return { status: res.status, data: null, error: (body as { error?: string } | null)?.error ?? "Something went wrong" };
+  const b = body as { error?: string; code?: string } | null;
+  return { status: res.status, data: null, error: b?.error ?? "Something went wrong", code: b?.code };
 }
 
 export async function getProfile(): Promise<Profile | null> {
