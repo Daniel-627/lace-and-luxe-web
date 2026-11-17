@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { COOKIE, apiAuth } from "../lib/session";
 import type { Quote, QuoteInput } from "../lib/checkout";
+import type { Product } from "../lib/types";
+import { API } from "../lib/api";
 
 type Res = { ok?: true; error?: string };
 
@@ -68,5 +70,26 @@ export async function startMpesa(token: string, phone?: string): Promise<Res> {
 
 export async function claimManual(token: string, code: string, accountId?: number): Promise<Res> {
   const r = await apiAuth("/api/pay/manual", { method: "POST", body: JSON.stringify({ token, code, ...(accountId ? { accountId } : {}) }) });
+  return r.error ? { error: r.error } : { ok: true };
+}
+
+// ---------- Wishlist and reviews ----------
+export async function syncWishlist(ids: number[]): Promise<{ ids?: number[] }> {
+  const r = await apiAuth<number[]>("/api/me/wishlist/sync", { method: "POST", body: JSON.stringify({ ids }) });
+  return r.data ? { ids: r.data } : {};
+}
+export async function addWish(productId: number): Promise<void> { await apiAuth("/api/me/wishlist", { method: "POST", body: JSON.stringify({ productId }) }); }
+export async function removeWish(productId: number): Promise<void> { await apiAuth(`/api/me/wishlist/${productId}`, { method: "DELETE" }); }
+
+export async function getProductsByIds(ids: number[]): Promise<Product[]> {
+  if (!ids.length) return [];
+  try {
+    const r = await fetch(`${API}/api/products/by-ids?ids=${ids.slice(0, 50).join(",")}`, { cache: "no-store" });
+    return r.ok ? await r.json() : [];
+  } catch { return []; }
+}
+
+export async function submitReview(p: { productId: number; rating: number; title: string; body: string; showName: boolean }): Promise<Res> {
+  const r = await apiAuth("/api/me/reviews", { method: "POST", body: JSON.stringify(p) });
   return r.error ? { error: r.error } : { ok: true };
 }

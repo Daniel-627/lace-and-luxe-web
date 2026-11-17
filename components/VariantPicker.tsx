@@ -44,7 +44,7 @@ export default function VariantPicker({ product, colour: colourProp, onColourCha
       </div>
 
       <div>
-        <p className="mb-2 text-sm">Size</p>
+        <p className="mb-2 flex items-center justify-between text-sm"><span>Size</span><a href="/size-guide" target="_blank" rel="noopener noreferrer" className="text-xs underline">Size guide</a></p>
         <div className="flex flex-wrap gap-2">
           {options.map((v) => (
             <button key={v.id} disabled={v.stock <= 0} onClick={() => setSize(v.size)}

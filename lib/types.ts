@@ -7,5 +7,6 @@ export interface Media { id: number; kind: "IMAGE" | "VIDEO"; url: string; colou
 export interface Product {
   id: number; name: string; slug: string; description: string; image: string | null;
   category: Category | null; variants: Variant[]; media?: Media[];
+  rating?: { avg: number; count: number } | null; related?: Product[];
 }
 export interface CartItem { variantId: number; name: string; size: string; colour: string; price: number; qty: number }

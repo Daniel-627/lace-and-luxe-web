@@ -10,6 +10,8 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import CartProvider from "../components/CartProvider";
 import CartLink from "../components/CartLink";
+import WishlistProvider from "../components/WishlistProvider";
+import WishlistLink from "../components/WishlistLink";
 import { getAnnouncement } from "../lib/sanity";
 import { cookies } from "next/headers";
 
@@ -27,6 +29,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang="en">
       <body className="flex min-h-screen flex-col bg-ivory font-sans text-claret antialiased">
         <CartProvider>
+          <WishlistProvider signedIn={signedIn}>
           {announcement && <div className="bg-claret py-2 text-center text-xs uppercase tracking-[0.2em] text-champagne">{announcement}</div>}
           <header className="sticky top-0 z-30 border-b border-champagne/30 bg-ivory/85 backdrop-blur">
             <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
@@ -37,11 +40,17 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <nav className="hidden items-center gap-7 text-sm md:flex">
                 {NAV.map(([label, href]) => <Link key={label} href={href} className="transition hover:text-champagne">{label}</Link>)}
               </nav>
-              <div className="flex items-center gap-4"><Link href={signedIn ? "/account" : "/account/login"} className="text-sm transition hover:text-champagne">{signedIn ? "Account" : "Sign in"}</Link><CartLink /></div>
+              <form action="/shop" method="get" className="hidden md:block">
+                <input name="q" type="search" placeholder="Search" aria-label="Search products" className="w-36 rounded-full border border-champagne/60 bg-white/60 px-4 py-1.5 text-sm outline-none focus:border-claret" />
+              </form>
+              <div className="flex items-center gap-4"><Link href={signedIn ? "/account" : "/account/login"} className="text-sm transition hover:text-champagne">{signedIn ? "Account" : "Sign in"}</Link><WishlistLink /><CartLink /></div>
             </div>
             <nav className="flex gap-5 overflow-x-auto px-6 pb-3 text-sm md:hidden">
               {NAV.map(([label, href]) => <Link key={label} href={href} className="whitespace-nowrap">{label}</Link>)}
             </nav>
+            <form action="/shop" method="get" className="px-6 pb-3 md:hidden">
+              <input name="q" type="search" placeholder="Search products" aria-label="Search products" className="w-full rounded-full border border-champagne/60 bg-white/60 px-4 py-2 text-sm outline-none" />
+            </form>
           </header>
           <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">{children}</main>
           <footer className="mt-16 bg-claret text-ivory">
@@ -58,11 +67,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               </div>
               <div>
                 <p className="mb-3 text-xs uppercase tracking-[0.25em] text-champagne">Help</p>
-                <ul className="space-y-2 text-sm text-ivory/80"><li><Link href="/cart" className="hover:text-champagne">Cart</Link></li></ul>
+                <ul className="space-y-2 text-sm text-ivory/80"><li><Link href="/size-guide" className="hover:text-champagne">Size guide</Link></li><li><Link href="/wishlist" className="hover:text-champagne">Wishlist</Link></li><li><Link href="/cart" className="hover:text-champagne">Cart</Link></li></ul>
               </div>
             </div>
             <p className="border-t border-ivory/10 py-4 text-center text-xs text-ivory/50">© Lace &amp; Luxe Delicates</p>
           </footer>
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>
