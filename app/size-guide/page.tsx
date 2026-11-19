@@ -1,6 +1,6 @@
 import { API } from "../../lib/api";
 
-export const metadata = { title: "Size guide | Lace & Luxe" };
+export const metadata = { title: "Size guide" };
 export const dynamic = "force-dynamic";
 
 interface Guide { intro: string; sections: { title: string; text: string; table: string }[] }

@@ -1,10 +1,23 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { kes } from "../../lib/api";
 import { searchProducts } from "../../lib/catalog";
 import ProductCard from "../../components/ProductCard";
 import Reveal from "../../components/Reveal";
 
-export const metadata = { title: "Shop | Lace & Luxe" };
+const titleCase = (slug: string) => slug.split("-").map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ");
+
+export function generateMetadata({ searchParams }: { searchParams: Record<string, string | undefined> }): Metadata {
+  const cat = searchParams.category;
+  // Searches, filters, sorting and later pages are for shoppers, not for Google: keep them out of the index.
+  const filtered = ["q", "size", "colour", "min", "max", "inStock", "sort", "page"].some((k) => searchParams[k]);
+  return {
+    title: cat ? titleCase(cat) : "Shop",
+    description: cat ? `Shop ${titleCase(cat).toLowerCase()} from Lace & Luxe. Delivered discreetly.` : "Shop lingerie, sleepwear and everyday essentials from Lace & Luxe. Delivered discreetly.",
+    alternates: { canonical: cat ? `/shop?category=${encodeURIComponent(cat)}` : "/shop" },
+    ...(filtered && { robots: { index: false, follow: true } }),
+  };
+}
 export const dynamic = "force-dynamic";
 
 const KEYS = ["q", "category", "size", "colour", "min", "max", "inStock", "sort"] as const;

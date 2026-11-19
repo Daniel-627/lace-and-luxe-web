@@ -8,7 +8,7 @@ import ProfileForm from "../../components/ProfileForm";
 import AddressBook from "../../components/AddressBook";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "My account | Lace & Luxe" };
+export const metadata = { title: "My account" };
 
 const PAY = { PENDING: "Awaiting payment", PAID: "Paid", FAILED: "Payment failed" } as const;
 const FULFIL: Record<string, string> = { NEW: "Order received", PACKED: "Packed", OUT_FOR_DELIVERY: "On its way", DELIVERED: "Delivered", CANCELLED: "Cancelled" };

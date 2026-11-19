@@ -14,8 +14,20 @@ import WishlistProvider from "../components/WishlistProvider";
 import WishlistLink from "../components/WishlistLink";
 import { getAnnouncement } from "../lib/sanity";
 import { cookies } from "next/headers";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { SITE, SITE_NAME } from "../lib/site";
 
-export const metadata: Metadata = { title: "Lace & Luxe", description: "Lingerie, sleepwear and everyday essentials." };
+const DESCRIPTION = "Lingerie, sleepwear and everyday essentials. Delivered discreetly.";
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE),
+  title: { default: `${SITE_NAME} | Lingerie, sleepwear and everyday essentials`, template: `%s | ${SITE_NAME}` },
+  description: DESCRIPTION,
+  applicationName: SITE_NAME,
+  icons: { icon: "/brand/monogram-claret.svg" },
+  openGraph: { type: "website", siteName: SITE_NAME, locale: "en_KE", title: SITE_NAME, description: DESCRIPTION },
+  twitter: { card: "summary_large_image", title: SITE_NAME, description: DESCRIPTION },
+};
 
 const NAV: [string, string][] = [
   ["Shop all", "/shop"], ["Bras", "/shop?category=bras"], ["Panties", "/shop?category=panties"],
@@ -74,6 +86,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           </footer>
           </WishlistProvider>
         </CartProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
