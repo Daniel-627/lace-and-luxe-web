@@ -26,7 +26,6 @@ export const metadata: Metadata = {
   title: { default: `${SITE_NAME} | Lingerie, sleepwear and everyday essentials`, template: `%s | ${SITE_NAME}` },
   description: DESCRIPTION,
   applicationName: SITE_NAME,
-  icons: { icon: "/brand/monogram-claret.svg" },
   openGraph: { type: "website", siteName: SITE_NAME, locale: "en_KE", title: SITE_NAME, description: DESCRIPTION },
   twitter: { card: "summary_large_image", title: SITE_NAME, description: DESCRIPTION },
 };
