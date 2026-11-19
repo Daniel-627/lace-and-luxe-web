@@ -12,6 +12,8 @@ import CartProvider from "../components/CartProvider";
 import CartLink from "../components/CartLink";
 import WishlistProvider from "../components/WishlistProvider";
 import WishlistLink from "../components/WishlistLink";
+import DesktopNav from "../components/DesktopNav";
+import { getCategories, MENU_SLOTS, MOBILE_STRIP } from "../lib/categories";
 import { getAnnouncement } from "../lib/sanity";
 import { cookies } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
@@ -29,13 +31,8 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: SITE_NAME, description: DESCRIPTION },
 };
 
-const NAV: [string, string][] = [
-  ["Shop all", "/shop"], ["Bras", "/shop?category=bras"], ["Panties", "/shop?category=panties"],
-  ["Lingerie sets", "/shop?category=lingerie-sets"], ["Sleepwear", "/shop?category=sleepwear"], ["For him", "/shop?category=mens-underwear"],
-];
-
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const announcement = await getAnnouncement();
+  const [announcement, categories] = await Promise.all([getAnnouncement(), getCategories()]);
   const signedIn = !!cookies().get("ll_session");
   return (
     <html lang="en">
@@ -44,29 +41,29 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <WishlistProvider signedIn={signedIn}>
           {announcement && <div className="bg-claret py-2 text-center text-xs uppercase tracking-[0.2em] text-champagne">{announcement}</div>}
           <header className="sticky top-0 z-30 border-b border-champagne/30 bg-ivory/85 backdrop-blur">
-            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+            <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
               <Link href="/" className="flex items-center gap-3">
                 <img src="/brand/monogram-claret.svg" alt="" className="h-9 w-auto" />
                 <span className="font-serif text-2xl tracking-wide">Lace &amp; Luxe</span>
               </Link>
-              <nav className="hidden items-center gap-7 text-sm md:flex">
-                {NAV.map(([label, href]) => <Link key={label} href={href} className="transition hover:text-champagne">{label}</Link>)}
-              </nav>
-              <form action="/shop" method="get" className="hidden md:block">
+              <DesktopNav categories={categories} slots={MENU_SLOTS} />
+              <form action="/shop" method="get" className="hidden xl:block">
                 <input name="q" type="search" placeholder="Search" aria-label="Search products" className="w-36 rounded-full border border-champagne/60 bg-white/60 px-4 py-1.5 text-sm outline-none focus:border-claret" />
               </form>
               <div className="flex items-center gap-4"><Link href={signedIn ? "/account" : "/account/login"} className="text-sm transition hover:text-champagne">{signedIn ? "Account" : "Sign in"}</Link><WishlistLink /><CartLink /></div>
             </div>
-            <nav className="flex gap-5 overflow-x-auto px-6 pb-3 text-sm md:hidden">
-              {NAV.map(([label, href]) => <Link key={label} href={href} className="whitespace-nowrap">{label}</Link>)}
+            <nav aria-label="Shop" className="flex gap-5 overflow-x-auto px-4 pb-3 text-sm sm:px-6 lg:hidden">
+              <Link href="/shop" className="whitespace-nowrap">Shop all</Link>
+              {categories.slice(0, MOBILE_STRIP).map((c) => <Link key={c.slug} href={`/shop?category=${encodeURIComponent(c.slug)}`} className="whitespace-nowrap">{c.name}</Link>)}
+              <Link href="/categories" className="whitespace-nowrap font-medium underline">All categories</Link>
             </nav>
-            <form action="/shop" method="get" className="px-6 pb-3 md:hidden">
-              <input name="q" type="search" placeholder="Search products" aria-label="Search products" className="w-full rounded-full border border-champagne/60 bg-white/60 px-4 py-2 text-sm outline-none" />
+            <form action="/shop" method="get" className="px-4 pb-3 sm:px-6 xl:hidden">
+              <input name="q" type="search" placeholder="Search products" aria-label="Search products" className="w-full rounded-full border border-champagne/60 bg-white/60 px-4 py-2 text-sm outline-none focus:border-claret" />
             </form>
           </header>
-          <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">{children}</main>
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">{children}</main>
           <footer className="mt-16 bg-claret text-ivory">
-            <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 md:grid-cols-3">
+            <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-3">
               <div>
                 <img src="/brand/badge-champagne.svg" alt="" className="h-24 w-auto" />
                 <p className="mt-3 max-w-xs text-sm text-ivory/70">Lingerie, sleepwear and everyday essentials. Delivered discreetly.</p>
@@ -74,7 +71,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <div>
                 <p className="mb-3 text-xs uppercase tracking-[0.25em] text-champagne">Shop</p>
                 <ul className="space-y-2 text-sm text-ivory/80">
-                  {NAV.map(([label, href]) => <li key={label}><Link href={href} className="hover:text-champagne">{label}</Link></li>)}
+                  <li><Link href="/shop" className="hover:text-champagne">Shop all</Link></li>
+                  {categories.slice(0, 8).map((c) => <li key={c.slug}><Link href={`/shop?category=${encodeURIComponent(c.slug)}`} className="hover:text-champagne">{c.name}</Link></li>)}
+                  <li><Link href="/categories" className="underline hover:text-champagne">All categories</Link></li>
                 </ul>
               </div>
               <div>

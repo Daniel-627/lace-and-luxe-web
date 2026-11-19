@@ -1,7 +1,9 @@
 type Common = { _key?: string; enabled?: boolean; startsAt?: string; endsAt?: string };
 
+export interface HeroSlideData { eyebrow?: string; headline: string; subheading?: string; primaryLabel?: string; primaryHref?: string; secondaryLabel?: string; secondaryHref?: string; imageUrl?: string }
+
 export type Block = Common & (
-  | { _type: "heroBlock"; eyebrow?: string; headline: string; subheading?: string; primaryLabel?: string; primaryHref?: string; secondaryLabel?: string; secondaryHref?: string; imageUrl?: string }
+  | { _type: "heroBlock"; eyebrow?: string; headline: string; subheading?: string; primaryLabel?: string; primaryHref?: string; secondaryLabel?: string; secondaryHref?: string; imageUrl?: string; slides?: Partial<HeroSlideData>[]; seconds?: number }
   | { _type: "tickerBlock"; items: string[] }
   | { _type: "categoryRowBlock"; eyebrow?: string; title?: string }
   | { _type: "productRowBlock"; eyebrow?: string; title?: string; category?: string; limit?: number }

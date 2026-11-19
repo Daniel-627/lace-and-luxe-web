@@ -1,33 +1,14 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import type { Product } from "../lib/types";
-import { safeHref, type Block } from "../lib/blocks";
+import type { Block, HeroSlideData } from "../lib/blocks";
+import { A, Rich } from "./Rich";
+import HeroSlide from "./HeroSlide";
+import HeroSlider from "./HeroSlider";
 import { sanityImg } from "../lib/sanity";
 import ProductCard from "./ProductCard";
 import SmartImage from "./SmartImage";
 import Reveal from "./Reveal";
 import Marquee from "./Marquee";
-
-/** Wrap a word in *stars* for italics; a new line becomes a line break. */
-function Rich({ text }: { text: string }) {
-  return (
-    <>
-      {text.split("\n").map((line, i) => (
-        <span key={i}>
-          {i > 0 && <br />}
-          {line.split(/(\*[^*]+\*)/g).map((part, j) => (part.length > 2 && part.startsWith("*") && part.endsWith("*") ? <em key={j}>{part.slice(1, -1)}</em> : part))}
-        </span>
-      ))}
-    </>
-  );
-}
-
-function A({ href, className, children }: { href?: string; className?: string; children: ReactNode }) {
-  const h = safeHref(href);
-  return h.startsWith("/")
-    ? <Link href={h} className={className}>{children}</Link>
-    : <a href={h} className={className} target="_blank" rel="noopener noreferrer">{children}</a>;
-}
 
 const Title = ({ eyebrow, text }: { eyebrow?: string; text?: string }) =>
   !eyebrow && !text ? null : (
@@ -41,29 +22,21 @@ const THEMES = { claret: "bg-claret text-ivory", champagne: "bg-champagne text-c
 
 function Render({ b, products }: { b: Block; products: Product[] }) {
   switch (b._type) {
-    case "heroBlock":
+    case "heroBlock": {
+      // Slide 1 is the block's own fields (so existing homepages keep working); extra slides come from the "More slides" list.
+      const first: HeroSlideData = { eyebrow: b.eyebrow, headline: b.headline, subheading: b.subheading, primaryLabel: b.primaryLabel, primaryHref: b.primaryHref, secondaryLabel: b.secondaryLabel, secondaryHref: b.secondaryHref, imageUrl: b.imageUrl };
+      const extra = (b.slides ?? []).filter((x): x is HeroSlideData => !!x?.headline?.trim());
+      const slides = [first, ...extra];
       return (
-        <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-claret via-claret to-[#7a3042] text-ivory">
+        <section className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-claret via-claret to-[#7a3042] text-ivory sm:rounded-[2rem]">
           <div className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-rose/25 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-28 right-1/3 h-80 w-80 animate-float rounded-full bg-champagne/20 blur-3xl" />
-          <div className="relative grid items-center gap-10 px-8 py-14 md:grid-cols-2 md:px-14 md:py-20">
-            <div>
-              {b.eyebrow && <p className="animate-fade-up text-xs uppercase tracking-[0.35em] text-champagne">{b.eyebrow}</p>}
-              <h1 className="mt-5 animate-fade-up font-serif text-5xl leading-[1.05] md:text-7xl" style={{ animationDelay: ".15s" }}><Rich text={b.headline} /></h1>
-              {b.subheading && <p className="mt-6 max-w-md animate-fade-up text-ivory/80" style={{ animationDelay: ".3s" }}>{b.subheading}</p>}
-              <div className="mt-8 flex animate-fade-up flex-wrap gap-4" style={{ animationDelay: ".45s" }}>
-                {b.primaryLabel && <A href={b.primaryHref} className="rounded-full bg-champagne px-8 py-3 text-sm tracking-wide text-claret transition hover:bg-ivory">{b.primaryLabel}</A>}
-                {b.secondaryLabel && <A href={b.secondaryHref} className="rounded-full border border-ivory/60 px-8 py-3 text-sm tracking-wide transition hover:bg-ivory hover:text-claret">{b.secondaryLabel}</A>}
-              </div>
-            </div>
-            <div className="mx-auto w-full max-w-sm animate-fade-up" style={{ animationDelay: ".3s" }}>
-              <div className="aspect-[4/5] rounded-t-full border border-champagne/60 p-2">
-                <div className="h-full overflow-hidden rounded-t-full"><SmartImage src={sanityImg(b.imageUrl, 900)} alt="" /></div>
-              </div>
-            </div>
-          </div>
+          {slides.length > 1
+            ? <HeroSlider seconds={b.seconds}>{slides.map((s, k) => <HeroSlide key={k} s={s} first={k === 0} />)}</HeroSlider>
+            : <HeroSlide s={first} first />}
         </section>
       );
+    }
 
     case "tickerBlock":
       return b.items?.length ? <Marquee items={b.items} /> : null;

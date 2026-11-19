@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 const PLACEHOLDER = "/placeholder.svg";
 
 /** Shows the image, or the brand placeholder when there is no image or it fails to load. */
-export default function SmartImage({ src, alt, className = "" }: { src?: string | null; alt: string; className?: string }) {
+export default function SmartImage({ src, alt, className = "", eager = false }: { src?: string | null; alt: string; className?: string; eager?: boolean }) {
   const [failed, setFailed] = useState(false);
   const ref = useRef<HTMLImageElement>(null);
   useEffect(() => {
@@ -16,7 +16,7 @@ export default function SmartImage({ src, alt, className = "" }: { src?: string 
       ref={ref}
       src={!src || failed ? PLACEHOLDER : src}
       alt={alt}
-      loading="lazy"
+      loading={eager ? "eager" : "lazy"}
       onError={() => setFailed(true)}
       className={`h-full w-full object-cover ${className}`}
     />
