@@ -69,7 +69,7 @@ export default function CheckoutClient({ profile, addresses }: { profile: Profil
   async function sendVCode() {
     setVMsg("");
     const r = await requestCode(f.phone);
-    if (r.ok) { setVSent(true); setVMsg(r.manual ? "We will send your code by text or WhatsApp. It can take a few minutes." : "Code sent. Check your messages."); }
+    if (r.ok) { setVSent(true); setVMsg(r.manual ? "We will send your code on WhatsApp. It can take a few minutes." : "Code sent. Check your messages."); }
     else setVMsg(r.error ?? "Could not send the code.");
   }
   async function checkVCode() {

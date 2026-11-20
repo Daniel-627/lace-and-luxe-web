@@ -35,7 +35,7 @@ export default function LoginPage() {
         </>
       ) : (
         <>
-          <p className="text-sm text-claret/70">{manual ? `We will send a 6-digit code to ${phone} by text or WhatsApp. It can take a few minutes, and it lasts 10 minutes.` : `We sent a 6-digit code to ${phone}. It lasts 5 minutes.`}</p>
+          <p className="text-sm text-claret/70">{manual ? `We will send a 6-digit code to ${phone} on WhatsApp. It can take a few minutes, and it lasts 10 minutes.` : `We sent a 6-digit code to ${phone}. It lasts 5 minutes.`}</p>
           <input className={`${box} text-center text-2xl tracking-[0.4em]`} inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
           <button disabled={busy || code.length !== 6} onClick={check} className="w-full rounded-full bg-claret py-3 text-ivory disabled:opacity-50">{busy ? "Checking…" : "Sign in"}</button>
           <button onClick={() => { setStep("phone"); setCode(""); setError(""); }} className="text-sm underline">Use a different number or send a new code</button>
