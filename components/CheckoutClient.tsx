@@ -15,6 +15,8 @@ const local = (p: string) => (/^254\d{9}$/.test(p) ? `0${p.slice(3)}` : p);
 const box = "w-full rounded-sm border border-champagne/60 bg-white/70 p-3";
 const empty = { name: "", phone: "", phone2: "", email: "", dName: "", dPhone: "", county: "", area: "", details: "" };
 
+const Soon = () => <span className="rounded-full bg-rose/25 px-2 py-0.5 text-[10px] uppercase tracking-[0.1em]">Coming soon</span>;
+
 export default function CheckoutClient({ profile, addresses }: { profile: Profile | null; addresses: Address[] }) {
   const router = useRouter();
   const { items, remove, clear } = useCart();
@@ -101,7 +103,7 @@ export default function CheckoutClient({ profile, addresses }: { profile: Profil
     if (!r.token) { setBusy(false); setMsg(r.error ?? "Something went wrong. Please try again."); return; }
     clear();
     if (timing === "NOW" && method === "STK") await startMpesa(r.token); // if this fails, the next page offers other ways to pay
-    router.push(`/track/${r.token}`);
+    router.push(`/track/${r.token}${timing === "NOW" && method === "MANUAL" ? "?placed=1" : ""}`);
   }
 
   if (!items.length) return <p>Your cart is empty. <Link href="/shop" className="underline">Keep shopping</Link></p>;
@@ -110,7 +112,7 @@ export default function CheckoutClient({ profile, addresses }: { profile: Profil
   const nowOk = !!q?.pay.now.available;
   const podOk = !!q?.pay.onDelivery.available;
   const chosenAcc = q?.pay.now.accounts.find((a) => a.id === accountId);
-  const label = timing === "ON_DELIVERY" ? "Place order, pay on delivery" : method === "STK" ? `Pay ${q ? kes(q.total) : ""} with M-Pesa` : "Place order and pay to our till";
+  const label = timing === "ON_DELIVERY" ? "Place order, pay on delivery" : method === "STK" ? `Pay ${q ? kes(q.total) : ""} with M-Pesa` : "Place order and continue to payment";
 
   return (
     <div className="max-w-2xl space-y-10">
@@ -183,17 +185,34 @@ export default function CheckoutClient({ profile, addresses }: { profile: Profil
       <section className="space-y-3">
         <h2 className="font-serif text-2xl">How would you like to pay?</h2>
         {q && !nowOk && !podOk && <p className="text-sm">No payment option is available for this basket right now. Please order on WhatsApp.</p>}
+        {q && !nowOk && (
+          <div className="rounded-sm border border-champagne/60 bg-white/50 p-3 text-sm text-claret/70">
+            <span className="flex flex-wrap items-center gap-2"><b>Pay now</b> <Soon /></span>
+            <span className="mt-1 block">M-Pesa prompts and card payments are coming soon. For now you can pay on delivery or order on WhatsApp.</span>
+          </div>
+        )}
         {nowOk && (
           <label className={`block cursor-pointer rounded-sm border p-3 text-sm ${timing === "NOW" ? "border-claret bg-white" : "border-champagne/60 bg-white/50"}`}>
             <span className="flex items-center gap-3"><input type="radio" name="timing" checked={timing === "NOW"} onChange={() => setTiming("NOW")} /><b>Pay now</b></span>
             {timing === "NOW" && q && (
               <span className="mt-3 block space-y-2 pl-6">
-                {q.pay.now.stk && <label className="flex items-center gap-2"><input type="radio" name="method" checked={method === "STK"} onChange={() => setMethod("STK")} /> M-Pesa prompt on my phone</label>}
+                {q.pay.now.stk
+                  ? <label className="flex items-center gap-2"><input type="radio" name="method" checked={method === "STK"} onChange={() => setMethod("STK")} /> M-Pesa prompt on my phone</label>
+                  : <span className="flex flex-wrap items-center gap-2 text-claret/50"><input type="radio" disabled /> M-Pesa prompt on my phone <Soon /></span>}
+                <span className="flex flex-wrap items-center gap-2 text-claret/50"><input type="radio" disabled /> Card (Visa or Mastercard) <Soon /></span>
                 {q.pay.now.accounts.length > 0 && <label className="flex items-center gap-2"><input type="radio" name="method" checked={method === "MANUAL"} onChange={() => setMethod("MANUAL")} /> {q.pay.now.stk ? "Pay to the till myself" : "Pay to our till, paybill or Pochi"}</label>}
                 {method === "MANUAL" && q.pay.now.accounts.length > 1 && (
                   <select className={box} value={accountId ?? ""} onChange={(e) => setAccountId(Number(e.target.value))}>{q.pay.now.accounts.map((a) => <option key={a.id} value={a.id}>{a.displayName} ({a.number})</option>)}</select>
                 )}
-                {method === "MANUAL" && chosenAcc && <ol className="list-decimal space-y-1 pl-5 text-claret/80">{payHow(chosenAcc, q.total, "your order reference (shown after you place the order)").map((s, i) => <li key={i}>{s}</li>)}</ol>}
+                {method === "MANUAL" && chosenAcc && (
+                  <span className="block space-y-2 rounded-sm bg-rose/10 p-3">
+                    <span className="block font-medium">How this works</span>
+                    <ol className="list-decimal space-y-1 pl-5 text-claret/80">
+                      {payHow(chosenAcc, q.total, "your order reference (shown after you place the order)").map((s, i) => <li key={i}>{s}</li>)}
+                      <li>Come back to your order page (we take you there after you place the order) and type the code from your M-Pesa message.</li>
+                    </ol>
+                  </span>
+                )}
               </span>
             )}
           </label>

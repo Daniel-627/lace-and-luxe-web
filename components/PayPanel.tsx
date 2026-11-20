@@ -73,11 +73,16 @@ export default function PayPanel({ token, reference, total, stk, accounts, claim
             </select>
           )}
           {chosen && <ol className="list-decimal space-y-1 pl-5 text-sm">{payHow(chosen, total, reference).map((s, i) => <li key={i}>{s}</li>)}</ol>}
-          <p className="text-sm">When you have paid, type the code from the M-Pesa message you receive:</p>
-          <input className={`${box} uppercase tracking-widest`} placeholder="e.g. QGH7XYZ123" maxLength={12} value={code} onChange={(e) => setCode(e.target.value.replace(/[^A-Za-z0-9]/g, ""))} />
-          <button disabled={busy} onClick={() => void sendCode()} className="rounded-full border border-claret px-6 py-2.5 text-sm disabled:opacity-50">I&apos;ve paid</button>
+          <div className="space-y-2 rounded-xl border border-claret bg-white p-4">
+            <p className="text-sm font-medium">After you have paid, enter your M-Pesa code</p>
+            <p className="text-xs text-claret/70">It is in the message M-Pesa sends you: 10 letters and numbers, like QGH7XYZ123.</p>
+            <input className={`${box} uppercase tracking-widest`} placeholder="e.g. QGH7XYZ123" maxLength={12} autoComplete="off" autoCapitalize="characters" spellCheck={false} value={code}
+              onChange={(e) => setCode(e.target.value.replace(/[^A-Za-z0-9]/g, ""))} onKeyDown={(e) => { if (e.key === "Enter" && !busy) void sendCode(); }} />
+            <button disabled={busy} onClick={() => void sendCode()} className="rounded-full bg-claret px-6 py-2.5 text-sm text-ivory disabled:opacity-50">{busy ? "Sending…" : "I\u2019ve paid"}</button>
+          </div>
         </div>
       )}
+      {!stk && <p className="border-t border-champagne/40 pt-4 text-xs text-claret/60">M-Pesa prompts and card payments are coming soon.</p>}
       {msg && <p className="text-sm">{msg}</p>}
     </div>
   );

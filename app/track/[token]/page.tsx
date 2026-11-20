@@ -16,7 +16,7 @@ interface Tracked {
 }
 const FULFIL: Record<string, string> = { NEW: "Order received", PACKED: "Packed", OUT_FOR_DELIVERY: "On its way to you", DELIVERED: "Delivered", CANCELLED: "Cancelled" };
 
-export default async function Track({ params }: { params: { token: string } }) {
+export default async function Track({ params, searchParams }: { params: { token: string }; searchParams: { placed?: string } }) {
   const res = await fetch(`${API}/api/orders/track/${params.token}`, { cache: "no-store", headers: edgeHeaders() });
   if (!res.ok) return <p>We couldn&apos;t find that order.</p>;
   const o: Tracked = await res.json();
@@ -33,6 +33,9 @@ export default async function Track({ params }: { params: { token: string } }) {
       <h1 className="font-serif text-3xl">Order {o.reference}</h1>
       <p className="text-lg">{headline}</p>
       {o.status !== "EXPIRED" && <p className="text-sm">Delivery: <b>{FULFIL[o.fulfilment] ?? o.fulfilment}</b></p>}
+      {searchParams.placed && o.status === "PENDING" && !pod && !o.claimedCode && (
+        <p className="rounded-2xl border border-claret bg-white p-4 text-sm"><b>Your order is placed. One more step.</b> Pay using the steps below, then type the code from your M-Pesa message and tap &ldquo;I&apos;ve paid&rdquo;. We will confirm your order once we see the payment.</p>
+      )}
       {pod && o.status === "PENDING" && <p className="rounded-2xl bg-rose/15 p-4 text-sm">Please have {kes(o.total)} ready. You pay when your order arrives.</p>}
 
       {o.pay && <PayPanel token={params.token} reference={o.reference} total={o.total} stk={o.pay.stk} accounts={o.pay.accounts} claimed={o.claimedCode} payNote={o.payNote} expiresAt={o.expiresAt} />}

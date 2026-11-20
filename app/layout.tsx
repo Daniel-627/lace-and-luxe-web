@@ -26,6 +26,17 @@ export const metadata: Metadata = {
   title: { default: `${SITE_NAME} | Lingerie, sleepwear and everyday essentials`, template: `%s | ${SITE_NAME}` },
   description: DESCRIPTION,
   applicationName: SITE_NAME,
+  icons: {
+    // Transparent, so the tab colour shows through: claret mark in light mode, ivory mark in dark mode.
+    icon: [
+      { url: "/icons/light-32.png", sizes: "32x32", type: "image/png", media: "(prefers-color-scheme: light)" },
+      { url: "/icons/light-48.png", sizes: "48x48", type: "image/png", media: "(prefers-color-scheme: light)" },
+      { url: "/icons/light-192.png", sizes: "192x192", type: "image/png", media: "(prefers-color-scheme: light)" },
+      { url: "/icons/dark-32.png", sizes: "32x32", type: "image/png", media: "(prefers-color-scheme: dark)" },
+      { url: "/icons/dark-48.png", sizes: "48x48", type: "image/png", media: "(prefers-color-scheme: dark)" },
+      { url: "/icons/dark-192.png", sizes: "192x192", type: "image/png", media: "(prefers-color-scheme: dark)" },
+    ],
+  },
   openGraph: { type: "website", siteName: SITE_NAME, locale: "en_KE", title: SITE_NAME, description: DESCRIPTION },
   twitter: { card: "summary_large_image", title: SITE_NAME, description: DESCRIPTION },
 };
