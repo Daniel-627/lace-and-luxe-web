@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { SITE, SITE_NAME } from "../../../lib/site";
+import { FEATURES } from "../../../lib/features";
 import { API } from "../../../lib/api";
 import type { Product } from "../../../lib/types";
 import { apiAuth, getProfile } from "../../../lib/session";
@@ -49,7 +50,7 @@ function productJsonLd(p: Product) {
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   const p = await load(params.slug);
   if (!p) notFound();
-  const profile = await getProfile();
+  const profile = FEATURES.accounts ? await getProfile() : null;
   const eligibility = profile ? (await apiAuth<{ eligible: boolean; reason?: string }>(`/api/me/reviewable/${p.id}`)).data : null;
 
   return (

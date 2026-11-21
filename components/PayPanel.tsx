@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { claimManual, startMpesa } from "../app/actions";
 import { payHow, type PayAccount } from "../lib/checkout";
+import { FEATURES } from "../lib/features";
 
 const box = "w-full rounded-sm border border-champagne/60 bg-white/70 p-3";
 
@@ -10,6 +11,7 @@ export default function PayPanel({ token, reference, total, stk, accounts, claim
   token: string; reference: string; total: number; stk: boolean; accounts: PayAccount[]; claimed: string | null; payNote: string | null; expiresAt: string | null;
 }) {
   const router = useRouter();
+  const stkOn = FEATURES.mpesaPrompt && stk;
   const [now, setNow] = useState(0);
   const [useOther, setUseOther] = useState(false);
   const [other, setOther] = useState("");
@@ -55,7 +57,7 @@ export default function PayPanel({ token, reference, total, stk, accounts, claim
         {payNote && <p className="mt-1 text-sm font-medium">{payNote}</p>}
       </div>
 
-      {stk && (
+      {stkOn && (
         <div className="space-y-3">
           <p className="text-sm font-medium">Get an M-Pesa prompt on your phone</p>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={useOther} onChange={(e) => setUseOther(e.target.checked)} /> Pay from a different number</label>
@@ -66,7 +68,7 @@ export default function PayPanel({ token, reference, total, stk, accounts, claim
 
       {accounts.length > 0 && (
         <div className="space-y-3 border-t border-champagne/40 pt-5">
-          <p className="text-sm font-medium">{stk ? "Or pay by hand" : "Pay by hand"}</p>
+          <p className="text-sm font-medium">{stkOn ? "Or pay by hand" : "Pay by hand"}</p>
           {accounts.length > 1 && (
             <select className={box} value={acc ?? ""} onChange={(e) => setAcc(Number(e.target.value))}>
               {accounts.map((a) => <option key={a.id} value={a.id}>{a.displayName} ({a.kind === "TILL" ? "Till" : a.kind === "PAYBILL" ? "Paybill" : "Pochi la Biashara"} {a.number})</option>)}
@@ -82,7 +84,6 @@ export default function PayPanel({ token, reference, total, stk, accounts, claim
           </div>
         </div>
       )}
-      {!stk && <p className="border-t border-champagne/40 pt-4 text-xs text-claret/60">M-Pesa prompts and card payments are coming soon.</p>}
       {msg && <p className="text-sm">{msg}</p>}
     </div>
   );

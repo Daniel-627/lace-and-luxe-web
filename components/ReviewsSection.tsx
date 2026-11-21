@@ -2,6 +2,7 @@ import Link from "next/link";
 import { API } from "../lib/api";
 import Stars from "./Stars";
 import ReviewForm from "./ReviewForm";
+import { FEATURES } from "../lib/features";
 
 interface Data {
   summary: { count: number; avg: number; distribution: number[] };
@@ -43,7 +44,7 @@ export default async function ReviewsSection({ slug, productId, signedIn, eligib
       ) : <p className="text-sm text-claret/70">No reviews yet.</p>}
 
       {eligibility?.eligible ? <ReviewForm productId={productId} /> : signedIn ? (eligibility?.reason && <p className="text-sm text-claret/70">{eligibility.reason}</p>) : (
-        <p className="text-sm text-claret/70">Received this product? <Link href="/account/login" className="underline">Sign in</Link> to write a review.</p>
+        FEATURES.accounts && <p className="text-sm text-claret/70">Received this product? <Link href="/account/login" className="underline">Sign in</Link> to write a review.</p>
       )}
     </section>
   );

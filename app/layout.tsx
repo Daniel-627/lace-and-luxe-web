@@ -12,6 +12,7 @@ import CartProvider from "../components/CartProvider";
 import CartLink from "../components/CartLink";
 import WishlistProvider from "../components/WishlistProvider";
 import WishlistLink from "../components/WishlistLink";
+import { FEATURES } from "../lib/features";
 import DesktopNav from "../components/DesktopNav";
 import { getCategories, MENU_SLOTS, MOBILE_STRIP } from "../lib/categories";
 import { getAnnouncement } from "../lib/sanity";
@@ -60,7 +61,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <form action="/shop" method="get" className="hidden xl:block">
                 <input name="q" type="search" placeholder="Search" aria-label="Search products" className="w-36 rounded-full border border-champagne/60 bg-white/60 px-4 py-1.5 text-sm outline-none focus:border-claret" />
               </form>
-              <div className="flex items-center gap-4"><Link href={signedIn ? "/account" : "/account/login"} className="text-sm transition hover:text-champagne">{signedIn ? "Account" : "Sign in"}</Link><WishlistLink /><CartLink /></div>
+              <div className="flex items-center gap-4">{FEATURES.accounts && <Link href={signedIn ? "/account" : "/account/login"} className="text-sm transition hover:text-champagne">{signedIn ? "Account" : "Sign in"}</Link>}<WishlistLink /><CartLink /></div>
             </div>
             <nav aria-label="Shop" className="flex gap-5 overflow-x-auto px-4 pb-3 text-sm sm:px-6 lg:hidden">
               <Link href="/shop" className="whitespace-nowrap">Shop all</Link>

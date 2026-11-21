@@ -9,13 +9,14 @@ import type { Address, Profile } from "../lib/account";
 import { payHow, type Quote } from "../lib/checkout";
 import { getQuote, placeOrder, requestCode, startMpesa, verifyInline } from "../app/actions";
 import WhatsAppButton from "./WhatsAppButton";
+import { FEATURES } from "../lib/features";
 
 const intl = (p: string) => { const d = p.replace(/\D/g, ""); return d.startsWith("254") ? d : "254" + d.replace(/^0/, ""); };
 const local = (p: string) => (/^254\d{9}$/.test(p) ? `0${p.slice(3)}` : p);
 const box = "w-full rounded-sm border border-champagne/60 bg-white/70 p-3";
 const empty = { name: "", phone: "", phone2: "", email: "", dName: "", dPhone: "", county: "", area: "", details: "" };
 
-const Soon = () => <span className="rounded-full bg-rose/25 px-2 py-0.5 text-[10px] uppercase tracking-[0.1em]">Coming soon</span>;
+const REMEMBER_KEY = "ll_checkout_details";
 
 export default function CheckoutClient({ profile, addresses }: { profile: Profile | null; addresses: Address[] }) {
   const router = useRouter();
@@ -35,6 +36,23 @@ export default function CheckoutClient({ profile, addresses }: { profile: Profil
   const [vMsg, setVMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [remember, setRemember] = useState(true);
+
+  // Switched-off features never show, whatever the server says is available.
+  const stkOn = FEATURES.mpesaPrompt && !!quote?.pay.now.stk;
+  const hasTill = (quote?.pay.now.accounts.length ?? 0) > 0;
+  const nowOk = stkOn || hasTill;
+  const podOk = FEATURES.payOnDelivery && !!quote?.pay.onDelivery.available;
+
+  // No accounts: bring back the customer's details from this device, if they asked us to remember them.
+  useEffect(() => {
+    if (profile) return;
+    try {
+      const d = JSON.parse(localStorage.getItem(REMEMBER_KEY) ?? "null") as Partial<typeof empty> | null;
+      if (d) setF((x) => ({ ...x, name: x.name || d.name || "", phone: x.phone || d.phone || "", phone2: x.phone2 || d.phone || "", email: x.email || d.email || "", county: x.county || d.county || "", area: x.area || d.area || "", details: x.details || d.details || "" }));
+    } catch { /* private mode or bad data: just start empty */ }
+  }, [profile]);
+
   const set = (k: keyof typeof empty) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
 
   // Prices, delivery options and what is allowed are all worked out on the server.
@@ -52,10 +70,10 @@ export default function CheckoutClient({ profile, addresses }: { profile: Profil
     const opts = quote.delivery.options;
     if (!opts.some((o) => o.serviceId === serviceId)) setServiceId(opts[0]?.serviceId ?? null);
     const n = quote.pay.now;
-    if (timing === "ON_DELIVERY" && !quote.pay.onDelivery.available) setTiming(n.available ? "NOW" : "ON_DELIVERY");
-    if (timing === "NOW" && !n.available && quote.pay.onDelivery.available) setTiming("ON_DELIVERY");
-    if (method === "STK" && !n.stk && n.accounts.length) setMethod("MANUAL");
-    if (method === "MANUAL" && n.stk && !n.accounts.length) setMethod("STK");
+    if (timing === "ON_DELIVERY" && !podOk) setTiming(nowOk ? "NOW" : "ON_DELIVERY");
+    if (timing === "NOW" && !nowOk && podOk) setTiming("ON_DELIVERY");
+    if (method === "STK" && !stkOn && n.accounts.length) setMethod("MANUAL");
+    if (method === "MANUAL" && stkOn && !n.accounts.length) setMethod("STK");
     if (n.accounts.length && !n.accounts.some((a) => a.id === accountId)) setAccountId(n.accounts[0].id);
   }, [quote]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -93,7 +111,8 @@ export default function CheckoutClient({ profile, addresses }: { profile: Profil
     if (timing === "NOW" && method === "MANUAL" && !accountId) return setMsg("Please choose where you will pay.");
     if (needsVerify) return setMsg("Please verify your phone number to pay on delivery.");
 
-    const payment = timing === "NOW" ? (method === "STK" ? { timing, method: "STK" } : { timing, method: "MANUAL", accountId }) : { timing, method: "COD" };
+    const useStk = stkOn && method === "STK";
+    const payment = timing === "NOW" ? (useStk ? { timing, method: "STK" } : { timing, method: "MANUAL", accountId }) : { timing, method: "COD" };
     setBusy(true);
     const r = await placeOrder({
       contact: { name: f.name, phone: f.phone }, email: f.email,
@@ -101,23 +120,25 @@ export default function CheckoutClient({ profile, addresses }: { profile: Profil
       payment, code: code || undefined, items: items.map((i) => ({ variantId: i.variantId, qty: i.qty })),
     });
     if (!r.token) { setBusy(false); setMsg(r.error ?? "Something went wrong. Please try again."); return; }
+    try {
+      if (remember && !profile) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ name: f.name, phone: f.phone, email: f.email, county: f.county, area: f.area, details: f.details }));
+      else localStorage.removeItem(REMEMBER_KEY);
+    } catch { /* ignore */ }
     clear();
-    if (timing === "NOW" && method === "STK") await startMpesa(r.token); // if this fails, the next page offers other ways to pay
-    router.push(`/track/${r.token}${timing === "NOW" && method === "MANUAL" ? "?placed=1" : ""}`);
+    if (timing === "NOW" && useStk) await startMpesa(r.token); // if this fails, the next page offers other ways to pay
+    router.push(`/track/${r.token}${timing === "NOW" && !useStk ? "?placed=1" : ""}`);
   }
 
   if (!items.length) return <p>Your cart is empty. <Link href="/shop" className="underline">Keep shopping</Link></p>;
 
   const q = quote;
-  const nowOk = !!q?.pay.now.available;
-  const podOk = !!q?.pay.onDelivery.available;
   const chosenAcc = q?.pay.now.accounts.find((a) => a.id === accountId);
-  const label = timing === "ON_DELIVERY" ? "Place order, pay on delivery" : method === "STK" ? `Pay ${q ? kes(q.total) : ""} with M-Pesa` : "Place order and continue to payment";
+  const label = timing === "ON_DELIVERY" ? "Place order, pay on delivery" : stkOn && method === "STK" ? `Pay ${q ? kes(q.total) : ""} with M-Pesa` : "Place order and continue to payment";
 
   return (
     <div className="max-w-2xl space-y-10">
       <h1 className="font-serif text-4xl">Checkout</h1>
-      {!profile && <p className="text-sm text-claret/70">Have an account? <Link href="/account/login" className="underline">Sign in</Link> to fill in your details.</p>}
+      {FEATURES.accounts && !profile && <p className="text-sm text-claret/70">Have an account? <Link href="/account/login" className="underline">Sign in</Link> to fill in your details.</p>}
       {q?.problems.map((p, i) => <p key={i} className="rounded-sm border border-claret p-3 text-sm">{p}</p>)}
 
       <section className="space-y-2">
@@ -185,37 +206,30 @@ export default function CheckoutClient({ profile, addresses }: { profile: Profil
       <section className="space-y-3">
         <h2 className="font-serif text-2xl">How would you like to pay?</h2>
         {q && !nowOk && !podOk && <p className="text-sm">No payment option is available for this basket right now. Please order on WhatsApp.</p>}
-        {q && !nowOk && (
-          <div className="rounded-sm border border-champagne/60 bg-white/50 p-3 text-sm text-claret/70">
-            <span className="flex flex-wrap items-center gap-2"><b>Pay now</b> <Soon /></span>
-            <span className="mt-1 block">M-Pesa prompts and card payments are coming soon. For now you can pay on delivery or order on WhatsApp.</span>
-          </div>
-        )}
         {nowOk && (
-          <label className={`block cursor-pointer rounded-sm border p-3 text-sm ${timing === "NOW" ? "border-claret bg-white" : "border-champagne/60 bg-white/50"}`}>
-            <span className="flex items-center gap-3"><input type="radio" name="timing" checked={timing === "NOW"} onChange={() => setTiming("NOW")} /><b>Pay now</b></span>
-            {timing === "NOW" && q && (
-              <span className="mt-3 block space-y-2 pl-6">
-                {q.pay.now.stk
-                  ? <label className="flex items-center gap-2"><input type="radio" name="method" checked={method === "STK"} onChange={() => setMethod("STK")} /> M-Pesa prompt on my phone</label>
-                  : <span className="flex flex-wrap items-center gap-2 text-claret/50"><input type="radio" disabled /> M-Pesa prompt on my phone <Soon /></span>}
-                <span className="flex flex-wrap items-center gap-2 text-claret/50"><input type="radio" disabled /> Card (Visa or Mastercard) <Soon /></span>
-                {q.pay.now.accounts.length > 0 && <label className="flex items-center gap-2"><input type="radio" name="method" checked={method === "MANUAL"} onChange={() => setMethod("MANUAL")} /> {q.pay.now.stk ? "Pay to the till myself" : "Pay to our till, paybill or Pochi"}</label>}
+          <div className={`rounded-sm border p-3 text-sm ${!podOk || timing === "NOW" ? "border-claret bg-white" : "border-champagne/60 bg-white/50"}`}>
+            {podOk
+              ? <label className="flex cursor-pointer items-center gap-3"><input type="radio" name="timing" checked={timing === "NOW"} onChange={() => setTiming("NOW")} /><b>Pay now with M-Pesa</b></label>
+              : <p className="font-medium">Pay with M-Pesa</p>}
+            {(!podOk || timing === "NOW") && q && (
+              <div className={`mt-3 space-y-2 ${podOk ? "pl-6" : ""}`}>
+                {stkOn && <label className="flex items-center gap-2"><input type="radio" name="method" checked={method === "STK"} onChange={() => setMethod("STK")} /> M-Pesa prompt on my phone</label>}
+                {stkOn && hasTill && <label className="flex items-center gap-2"><input type="radio" name="method" checked={method === "MANUAL"} onChange={() => setMethod("MANUAL")} /> Pay to the till myself</label>}
                 {method === "MANUAL" && q.pay.now.accounts.length > 1 && (
                   <select className={box} value={accountId ?? ""} onChange={(e) => setAccountId(Number(e.target.value))}>{q.pay.now.accounts.map((a) => <option key={a.id} value={a.id}>{a.displayName} ({a.number})</option>)}</select>
                 )}
                 {method === "MANUAL" && chosenAcc && (
-                  <span className="block space-y-2 rounded-sm bg-rose/10 p-3">
-                    <span className="block font-medium">How this works</span>
+                  <div className="space-y-2 rounded-sm bg-rose/10 p-3">
+                    <p className="font-medium">How this works</p>
                     <ol className="list-decimal space-y-1 pl-5 text-claret/80">
                       {payHow(chosenAcc, q.total, "your order reference (shown after you place the order)").map((s, i) => <li key={i}>{s}</li>)}
                       <li>Come back to your order page (we take you there after you place the order) and type the code from your M-Pesa message.</li>
                     </ol>
-                  </span>
+                  </div>
                 )}
-              </span>
+              </div>
             )}
-          </label>
+          </div>
         )}
         {podOk && (
           <label className={`block cursor-pointer rounded-sm border p-3 text-sm ${timing === "ON_DELIVERY" ? "border-claret bg-white" : "border-champagne/60 bg-white/50"}`}>
@@ -223,7 +237,7 @@ export default function CheckoutClient({ profile, addresses }: { profile: Profil
             {timing === "ON_DELIVERY" && <span className="mt-2 block pl-6 text-claret/80">You pay when your order arrives. We confirm your phone number first.</span>}
           </label>
         )}
-        {q && !podOk && q.pay.onDelivery.reason && nowOk && <p className="text-xs text-claret/60">{q.pay.onDelivery.reason}</p>}
+        {FEATURES.payOnDelivery && q && !podOk && q.pay.onDelivery.reason && nowOk && <p className="text-xs text-claret/60">{q.pay.onDelivery.reason}</p>}
 
         {needsVerify && (
           <div className="space-y-3 rounded-sm border border-claret p-4 text-sm">
@@ -251,6 +265,7 @@ export default function CheckoutClient({ profile, addresses }: { profile: Profil
       </section>
 
       <div className="space-y-3">
+        {!profile && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember my details on this device for next time</label>}
         <button disabled={busy || !q || (!nowOk && !podOk)} onClick={() => void submit()} className="w-full rounded-full bg-claret py-3 text-ivory disabled:opacity-50">{busy ? "Placing your order…" : label}</button>
         {msg && <p className="text-sm">{msg}</p>}
         <WhatsAppButton source="cart" getItems={() => items.map((i) => ({ variantId: i.variantId, qty: i.qty }))} label="Order on WhatsApp instead" />

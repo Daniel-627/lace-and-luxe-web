@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useWishlist } from "../../components/WishlistProvider";
+import { FEATURES } from "../../lib/features";
 import ProductCard from "../../components/ProductCard";
 import { getProductsByIds } from "../actions";
 import type { Product } from "../../lib/types";
@@ -23,7 +24,7 @@ export default function WishlistPage() {
     <section className="space-y-8">
       <div className="text-center">
         <h1 className="font-serif text-5xl">Your wishlist</h1>
-        <p className="mt-2 text-sm text-claret/60">Saved on this device. Sign in and it follows you everywhere.</p>
+        <p className="mt-2 text-sm text-claret/60">Saved on this device.{FEATURES.accounts && " Sign in and it follows you everywhere."}</p>
       </div>
       {products === null ? <p className="text-center text-claret/70">Loading…</p> : shown.length === 0 ? (
         <p className="text-center text-claret/70">Nothing saved yet. Tap the ♡ on anything you love. <Link href="/shop" className="underline">Browse the shop</Link></p>
